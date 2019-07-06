@@ -1,0 +1,15 @@
+Q1: (A + B)*(A+B) 
+1. A*A + B*B 
+2. A*A +A*B + B*B 
+3. A*A +2*A*B + B*B (correct) 
+---
+Q2: (A + B)*(A - B) 
+1. A*A + 2*B*B 
+2. A*A - B*B (correct) 
+3. A*A -2*A*B + B*B 
+---
+Q3: sin(x)*sin(x) + cos(x)*cos(x) 
+1. 1 (correct) 
+2. 2 
+3. 3
+---
