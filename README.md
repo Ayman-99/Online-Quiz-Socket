@@ -25,7 +25,8 @@ Client:
 -	Asking for the math exam
 -	Can redo the exam again
 -	Can show the scores of his tests
--	Close the connection
+-	Close the connection.
+  
 Server:
 -	Wait for a client connection.
 -	Store the user name and password of the users
