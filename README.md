@@ -11,8 +11,10 @@ Initial version of upcoming GUI application. This version implements client/serv
 
 
 ## Notes:
-- Once server.java execute it will automatically creates txt file with inital questions. (Add more with same format if you want)
-- Users are stored in the database (can be changed)
+- Server must be run first then client.
+- Once server.java execute it will automatically creates txt file with inital questions. (Add more with same format if you want).
+- Users are stored in the database (can be changed).
+- Application support 1 to 1 connection (No threads)
 ```
 Need support ? 
 
