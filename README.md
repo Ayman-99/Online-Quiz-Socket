@@ -5,9 +5,14 @@ Initial version of upcoming GUI application. This version implements client/serv
 - Download the files from github
 - Import the project using NetBeans
 - Import the database in your mysql server
-- Update src > Main > DBConnection.java with the database details.
-- Open src > Main > main.java > Run
+- Update src > socketproject > DB_Connection.java with the database details[Line 31].
+- Open src > socketproject > Server.java > Run 
+- Open src > socketproject > Client.java > Run 
 
+
+## Notes:
+- Once server.java execute it will automatically creates txt file with inital questions. (Add more with same format if you want)
+- Users are stored in the database (can be changed)
 ```
 Need support ? 
 
