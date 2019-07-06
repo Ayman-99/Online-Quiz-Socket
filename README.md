@@ -31,7 +31,7 @@ Server:
 -	Wait for a client connection.
 -	Store the user name and password of the users
 -	Verify if the user in registered 
--	When a client connection is accepted (if user is registered) send an acknowledgement (a welcome message) as a string of text.
+-	When a client connection is accepted (if user is registered) send an acknowledgement (a welcome message).
 -	From Questions database, server sends the first test questions plus three possible answers to the client.
 -	Receives the answer from the client. Stores and evaluates the answer.
 -	After that the server sends score to the client and if he like to repeat the test
