@@ -1,4 +1,4 @@
-package socketproject;
+package serverclient;
 
 import java.io.*;
 import java.net.*;
@@ -6,166 +6,177 @@ import java.util.Scanner;
 
 public class Client {
 
+    private static Socket socket = null;
+    private static DataInputStream dataInputStream = null;
+    private static DataOutputStream dataOutputStream = null;
+    private static Scanner scanner = new Scanner(System.in);
+
     static {
         System.out.println("Client is running...");
         System.out.println("Waiting to connect...");
     }
 
-    private static Socket s = null;
-    private static DataInputStream dis = null;
-    private static DataOutputStream dos = null;
-
     public static void main(String[] args) {
-
         try {
-            InetAddress ip = InetAddress.getLocalHost();
-            int port = 2525;
-            Scanner scanner = new Scanner(System.in);
+            initializeConnection();
+            boolean isAuthenticated = false;
 
-            s = new Socket(ip, port);
+            System.out.println("Do you have an account? Y/N");
+            String hasAccount = scanner.next();
+            dataOutputStream.writeUTF(hasAccount);
 
-            dis = new DataInputStream(s.getInputStream());
-            dos = new DataOutputStream(s.getOutputStream());
-
-            System.out.println("Connected to " + s.getInetAddress() + " and streams have been initilzied (Enter bye to close connection)");
-            boolean authpass = false;
-            int choice = -1;
-            System.out.println("Do you have account? Y/N");
-            String hasAcc = scanner.next();
-            dos.writeUTF(hasAcc);
             while (true) {
-                if (authpass) {
-                    System.out.println("Quiz features initializing...");
-                    System.out.println("1- Start quiz\n2- Redo quiz\n3- Show latest quiz score\n4- close connection");
-                    System.out.print("Enter 1 or 2 or 3 or 4: ");
-                    choice = scanner.nextInt();
-                    dos.writeUTF(String.valueOf(choice));
-                    boolean exit = choice == 4;
-                    switch (choice) {
-                        case 1:
-                            boolean more1 = true;
-                            String response1 = "";
-                            while (more1) {
-                                response1 = dis.readUTF();
-                                if (response1.startsWith("-------------------------------")) {
-                                    more1 = false;
-                                } else {
-                                    System.out.print(response1);
-                                    String answer1 = scanner.next();
-                                    dos.writeUTF(answer1);
-                                    System.out.println(dis.readUTF());
-                                }
-                            }
-                            System.out.println(response1);
-                            break;
-                        case 2:
-                            boolean more2 = true;
-                            String response2 = "";
-                            while (more2) {
-                                response2 = dis.readUTF();
-                                if (response2.startsWith("-------------------------------")) {
-                                    more2 = false;
-                                } else {
-                                    System.out.print(response2);
-                                    String answer1 = scanner.next();
-                                    dos.writeUTF(answer1);
-                                    System.out.println(dis.readUTF());
-                                }
-                            }
-                            System.out.println(response2);
-                            break;
-                        case 3:
-                            System.out.println("---------------------------Your latest score in last quiz is " + dis.readUTF());
-                            break;
-                        case 4:
-                            try {
-                                s.close();
-                                dos.close();
-                                dis.close();
-                            } catch (Exception ex) {
-                                System.out.println("Server is not running / Couldn't connect");
-                            }
-                            break;
-                    }
-                    if (exit) {
-                        System.out.println("Connection closed!");
+                if (isAuthenticated) {
+                    showQuizMenu();
+                    int choice = scanner.nextInt();
+                    dataOutputStream.writeUTF(String.valueOf(choice));
+                    if (choice == 4) {
+                        closeConnection();
                         break;
                     }
+                    handleQuizChoice(choice);
                 } else {
-                    if (hasAcc.equalsIgnoreCase("Y")) {
-                        System.out.print("Enter username: ");
-                        String username = scanner.next(); //Getting username from user
-                        if (username.equals("bye")) {
-                            break;
-                        }
-                        dos.writeUTF(username); //Sending it to the server to verfiy it
-                        String response1 = dis.readUTF(); //Getting response
-                        if (response1.equalsIgnoreCase("NAN")) { //if its NAN means the user didn't register
-                            System.out.println("Username does not exist (Try again)");
-                        } else { //Username exists, we check for password
-                            System.out.print("Enter password: ");
-                            String password = scanner.next();
-                            if (password.equals("bye")) {
-                                break;
-                            }
-                            dos.writeUTF(password);
-                            String response2 = dis.readUTF();
-                            if (response2.equalsIgnoreCase("NAN")) { //Password is wrong he has to register
-                                System.out.println("Password is wrong");
-                            } else { //All good start quiz
-                                System.out.println(response2);
-                                System.out.print("Do you want to start math exam? Y / N ?");
-                                String flag = scanner.next();
-                                dos.writeUTF(flag);
-                                if (flag.equalsIgnoreCase("Y")) {
-                                    authpass = true;
-                                } else {
-                                    System.exit(0);
-                                }
-                            }
-                        }
-                    } else {
-                        System.out.print("Enter username to register: ");
-                        String username = scanner.next(); //Getting username from user
-                        if (username.equals("bye")) {
-                            break;
-                        }
-                        dos.writeUTF(username); //Sending it to the server to verfiy it
-                        String response1 = dis.readUTF(); //Getting response
-                        if (response1.equalsIgnoreCase("Username exists! choose another")) { //if its NAN means the user didn't register
-                            System.out.println("Username exists! choose another");
-                        } else { //Username exists, we check for password
-                            System.out.print("Enter password to register: ");
-                            String password = scanner.next();
-                            dos.writeUTF(password);
-                            System.out.println(dis.readUTF());
-                            System.out.print("Do you want to start math exam? Y / N ?");
-                            String flag = scanner.next();
-                            dos.writeUTF(flag);
-                            if (flag.equalsIgnoreCase("Y")) {
-                                authpass = true;
-                            } else {
-                                System.exit(0);
-                            }
-                        }
-                    }
+                    isAuthenticated = handleAuthentication(hasAccount);
                 }
             }
         } catch (IOException ioException) {
             System.out.println("Server ended the connection!");
         } finally {
-            try {
-                s.close();
-                dos.close();
-                dis.close();
-            } catch (Exception ex) {
-                System.out.println("Server is not running / Couldn't connect");
+            closeConnection();
+        }
+    }
+
+    private static void initializeConnection() throws IOException {
+        InetAddress ip = InetAddress.getLocalHost();
+        int port = 2525;
+        socket = new Socket(ip, port);
+        dataInputStream = new DataInputStream(socket.getInputStream());
+        dataOutputStream = new DataOutputStream(socket.getOutputStream());
+        System.out.println("Connected to " + socket.getInetAddress() + " and streams have been initialized (Enter 'bye' to close connection)");
+    }
+
+    private static boolean handleAuthentication(String hasAccount) throws IOException {
+        if (hasAccount.equalsIgnoreCase("Y")) {
+            return authenticateExistingUser();
+        } else {
+            return registerNewUser();
+        }
+    }
+
+    private static boolean authenticateExistingUser() throws IOException {
+        System.out.print("Enter username: ");
+        String username = scanner.next();
+        if (username.equals("bye")) return false;
+
+        dataOutputStream.writeUTF(username);
+        String response = dataInputStream.readUTF();
+
+        if (response.equalsIgnoreCase("NAN")) {
+            System.out.println("Username does not exist. Try again.");
+            return false;
+        } else {
+            return verifyPassword();
+        }
+    }
+
+    private static boolean verifyPassword() throws IOException {
+        System.out.print("Enter password: ");
+        String password = scanner.next();
+        if (password.equals("bye")) return false;
+
+        dataOutputStream.writeUTF(password);
+        String response = dataInputStream.readUTF();
+
+        if (response.equalsIgnoreCase("NAN")) {
+            System.out.println("Password is incorrect.");
+            return false;
+        } else {
+            System.out.println(response);
+            return startQuiz();
+        }
+    }
+
+    private static boolean registerNewUser() throws IOException {
+        System.out.print("Enter username to register: ");
+        String username = scanner.next();
+        if (username.equals("bye")) return false;
+
+        dataOutputStream.writeUTF(username);
+        String response = dataInputStream.readUTF();
+
+        if (response.equalsIgnoreCase("Username exists! choose another")) {
+            System.out.println(response);
+            return false;
+        } else {
+            System.out.print("Enter password to register: ");
+            String password = scanner.next();
+            dataOutputStream.writeUTF(password);
+            System.out.println(dataInputStream.readUTF());
+            return startQuiz();
+        }
+    }
+
+    private static boolean startQuiz() throws IOException {
+        System.out.print("Do you want to start the math exam? Y/N: ");
+        String flag = scanner.next();
+        dataOutputStream.writeUTF(flag);
+        if(flag.equalsIgnoreCase("N")) {
+        	closeConnection();
+        }
+        return flag.equalsIgnoreCase("Y");
+    }
+
+    private static void showQuizMenu() {
+        System.out.println("Quiz features initializing...");
+        System.out.println("1- Start quiz");
+        System.out.println("2- Redo quiz");
+        System.out.println("3- Show latest quiz score");
+        System.out.println("4- Close connection");
+        System.out.print("Enter 1, 2, 3, or 4: ");
+    }
+
+    private static void handleQuizChoice(int choice) throws IOException {
+        switch (choice) {
+            case 1:
+            case 2:
+                handleQuiz();
+                break;
+            case 3:
+                showLatestScore();
+                break;
+            default:
+                System.out.println("Invalid choice, please try again.");
+                break;
+        }
+    }
+
+    private static void handleQuiz() throws IOException {
+        boolean moreQuestions = true;
+        while (moreQuestions) {
+            String question = dataInputStream.readUTF();
+            if (question.startsWith("-------------------------------")) {
+                moreQuestions = false;
+            } else {
+                System.out.print(question);
+                String answer = scanner.next();
+                dataOutputStream.writeUTF(answer);
+                System.out.println(dataInputStream.readUTF());
             }
         }
     }
+
+    private static void showLatestScore() throws IOException {
+        System.out.println("---------------------------Your latest score in the last quiz is: " + dataInputStream.readUTF());
+    }
+
+    private static void closeConnection() {
+        try {
+            if (socket != null) socket.close();
+            if (dataOutputStream != null) dataOutputStream.close();
+            if (dataInputStream != null) dataInputStream.close();
+            System.out.println("Connection closed!");
+        } catch (IOException e) {
+            System.out.println("Failed to close connection.");
+        }
+    }
 }
-
-
-
-
-
