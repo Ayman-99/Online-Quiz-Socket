@@ -1,4 +1,4 @@
-package serverclient;
+package socketproject;
 
 import java.io.*;
 import java.net.*;
